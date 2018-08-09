@@ -1,4 +1,4 @@
-function SINR = SINR_MUE_4(G, L, FBS, MBS, MUE, sigma2)
+function SINR = SINR_MUE_4(G, L, FBS, MBS, sigma2)
     fbsNum = size(FBS,2);
     P_interf = 0.0;
     sigma = 10^((sigma2-30)/10);

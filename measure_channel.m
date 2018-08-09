@@ -1,8 +1,8 @@
 function [G, L] = measure_channel(FBS,MBS,MUE,NumRealization)
     fbsNum = size(FBS,2);
-    G = zeros(fbsNum+1, fbsNum+1);
+    G = zeros(fbsNum+1, fbsNum+1); % (FBSi+BS,FUEi+MUE)
     L = zeros(fbsNum+1, fbsNum+1);
-    f=0.9; % Frequency in GHz
+    f=0.9; % Frequency in GHz, for GSM
     PLi = -1.8*f^2+10.6*f-5.5;
     for i=1:fbsNum
         xAgent = FBS{i}.X;

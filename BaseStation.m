@@ -19,7 +19,7 @@ classdef BaseStation
          end
          if isnumeric(transmitPower)
             %obj.P = 10^((transmitPower-30)/10);
-            obj.P = transmitPower;
+            obj.P = transmitPower;  % Watt, not dBm here
          else
             error(' P Value must be numeric')
          end
