@@ -4,8 +4,8 @@
 %   Which contains two phase, Independent and Cooperative Learning (IL&CL)
 %   And it takes the number of Npower as the number of columns of Q-Table
 %
-function FBS_out = PA_IL_CL3(FBS_in, Npower, fbsCount,femtocellPermutation, NumRealization, saveNum, CL)
-
+% function FBS_out = PA_IL_CL3(Npower, fbsCount,femtocellPermutation, NumRealization, saveNum, CL)
+function QFinal = PA_IL_CL3(Npower, fbsCount,femtocellPermutation, NumRealization, CL)
 %% Initialization
 % clear all;
 clc;
@@ -105,15 +105,15 @@ G = zeros(fbsNum+1, fbsNum+1); % Matrix Containing small scale fading coefficien
 L = zeros(fbsNum+1, fbsNum+1); % Matrix Containing large scale fading coefficients
 [G, L] = measure_channel(FBS,MBS,mue,NumRealization);
 %% Main Loop
-%     fprintf('Loop for %d number of FBS :\t', fbsCount);
-%      textprogressbar(sprintf('calculating outputs:'));
+fprintf('Loop for %d number of FBS :\t', fbsCount);
+textprogressbar(sprintf('calculating outputs:'));
 count = 0;
 errorVector = zeros(1,Iterations);
 dth = 25; %meter
 
 extra_time = 0.0;
 for episode = 1:Iterations
-    %          textprogressbar((episode/Iterations)*100);
+    textprogressbar((episode/Iterations)*100);
     sumQ = sumQ * 0.0;
     for j=1:size(FBS,2)
         fbs = FBS{j};
@@ -173,7 +173,7 @@ for episode = 1:Iterations
     SINR_FUE_Vec = SINR_FUE_2(G, L, FBS, MBS, -120);
     for i=1:size(mue,2)
         MUE = mue(i);
-        MUE.SINR = SINR_MUE_4(G, L, FBS, MBS, MUE, -120);
+        MUE.SINR = SINR_MUE_4(G, L, FBS, MBS, -120);
         %             MUE = MUE.setCapacity(log2(1+MUE.SINR));
         MUE.C = log2(1+MUE.SINR);
         mue(i)=MUE;
@@ -208,6 +208,7 @@ for episode = 1:Iterations
         % CALCULATING NEXT STATE AND REWARD
         beta = fbs.dMUE/dth;
         R = beta*fbs.C_FUE*(mue(1).C).^2 -(fbs.C_FUE-q_fue).^2 - (1/beta)*dum1;
+%         R = beta*fbs.C_FUE*(mue(1).C).^2 +(fbs.C_FUE-q_fue)+(mue(i).C-q_mue);
         a = tic;
         for nextState=1:size(states,1)
             if states(nextState,:) == fbs.state
@@ -220,7 +221,7 @@ for episode = 1:Iterations
     
     % break if convergence: small deviation on q for 1000 consecutive
     errorVector(episode) =  sum(sum(abs(Q1-sumQ)));
-    if sum(sum(abs(Q1-sumQ)))<0.001 && sum(sum(sumQ >0))
+    if sum(sum(abs(Q1-sumQ)))<0.0001 && sum(sum(sumQ >0))
         if count>1000
             %                 episode;  % report last episode
             break % for
@@ -250,6 +251,6 @@ answer.episode = episode;
 tt = toc(total);
 answer.time = tt - extra_time;
 QFinal = answer;
-save(sprintf('oct27/R_18_CL3/pro_%d_%d_%d.mat',Npower, fbsCount, saveNum),'QFinal');
-FBS_out = FBS;
+% save(sprintf('Compare/IL-CL3/pro-%d-%d-%d.mat',Npower, fbsCount, saveNum),'QFinal');
+% FBS_out = FBS;
 end
