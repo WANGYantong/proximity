@@ -5,7 +5,7 @@
 %   And it takes the number of Npower as the number of columns of Q-Table
 %
 % function FBS_out = PA_IL_CL3(Npower, fbsCount,femtocellPermutation, NumRealization, saveNum, CL)
-function QFinal = PA_IL_CL3(Npower, fbsCount,femtocellPermutation, NumRealization, CL)
+function QFinal = PA_IL_CL3(mueNumber,Npower, fbsCount,femtocellPermutation, NumRealization, CL)
 %% Initialization
 % clear all;
 clc;
@@ -45,40 +45,40 @@ sumQ = ones(size(states,1) , Npower) * 0.0;
 alpha = 0.5; gamma = 0.9; epsilon = 0.1 ; Iterations = 50000;
 %% Generate the UEs
 mue(1) = UE(204, 207);
-% mue(1) = UE(150, 150);
-% mue(1) = UE(-200, 0);
-% selectedMUE = mue(mueNumber);
+mue(2) = UE(150, 150);
+mue(3) = UE(-200, 0);
+selectedMUE = mue(mueNumber);
 MBS = BaseStation(0 , 0 , 50);
 %%
 %Generate fbsCount=16 FBSs, FemtoStation is the agent of RL algorithm
 FBS_Max = cell(1,16);
 for i=1:3
     %     if i<= fbsCount
-    FBS_Max{i} = FemtoStation(180+(i-1)*35,150, MBS, mue, 10);
+    FBS_Max{i} = FemtoStation(180+(i-1)*35,150, MBS, selectedMUE, 10);
     %     end
 end
 
 for i=1:3
     %     if i+3<= fbsCount
-    FBS_Max{i+3} = FemtoStation(165+(i-1)*30,180, MBS, mue, 10);
+    FBS_Max{i+3} = FemtoStation(165+(i-1)*30,180, MBS, selectedMUE, 10);
     %     end
 end
 
 for i=1:4
     %     if i+6<= fbsCount
-    FBS_Max{i+6} = FemtoStation(150+(i-1)*35,200, MBS, mue, 10);
+    FBS_Max{i+6} = FemtoStation(150+(i-1)*35,200, MBS, selectedMUE, 10);
     %     end
 end
 
 for i=1:3
     %     if i+10<= fbsCount
-    FBS_Max{i+10} = FemtoStation(160+(i-1)*35,240, MBS, mue, 10);
+    FBS_Max{i+10} = FemtoStation(160+(i-1)*35,240, MBS, selectedMUE, 10);
     %     end
 end
 
 for i=1:3
     %     if i+13<= fbsCount
-    FBS_Max{i+13} = FemtoStation(150+(i-1)*35,280, MBS, mue, 10);
+    FBS_Max{i+13} = FemtoStation(150+(i-1)*35,280, MBS, selectedMUE, 10);
     %     end
 end
 %%
@@ -103,7 +103,7 @@ end
 fbsNum = size(FBS,2);
 G = zeros(fbsNum+1, fbsNum+1); % Matrix Containing small scale fading coefficients
 L = zeros(fbsNum+1, fbsNum+1); % Matrix Containing large scale fading coefficients
-[G, L] = measure_channel(FBS,MBS,mue,NumRealization);
+[G, L] = measure_channel(FBS,MBS,selectedMUE,NumRealization);
 %% Main Loop
 fprintf('Loop for %d number of FBS :\t', fbsCount);
 textprogressbar(sprintf('calculating outputs:'));
@@ -171,18 +171,18 @@ for episode = 1:Iterations
     extra_time = extra_time + a1;
     % calc FUEs and MUEs capacity
     SINR_FUE_Vec = SINR_FUE_2(G, L, FBS, MBS, -120);
-    for i=1:size(mue,2)
-        MUE = mue(i);
+%     for i=1:size(mue,2)
+        MUE = selectedMUE;
         MUE.SINR = SINR_MUE_4(G, L, FBS, MBS, -120);
         %             MUE = MUE.setCapacity(log2(1+MUE.SINR));
         MUE.C = log2(1+MUE.SINR);
-        mue(i)=MUE;
-    end
+        selectedMUE=MUE;
+%     end
     
     dum1 = 1.0;
-    for i=1:size(mue,2)
-        dum1 = dum1 * (mue(i).C-q_mue)^2;
-    end
+%     for i=1:size(mue,2)
+        dum1 = dum1 * (selectedMUE.C-q_mue)^2;
+%     end
     
     for j=1:size(FBS,2)
         fbs = FBS{j};
@@ -207,7 +207,7 @@ for episode = 1:Iterations
         extra_time = extra_time + toc(a);
         % CALCULATING NEXT STATE AND REWARD
         beta = fbs.dMUE/dth;
-        R = beta*fbs.C_FUE*(mue(1).C).^2 -(fbs.C_FUE-q_fue).^2 - (1/beta)*dum1;
+        R = beta*fbs.C_FUE*(selectedMUE.C).^2 -(fbs.C_FUE-q_fue).^2 - (1/beta)*dum1;
 %         R = beta*fbs.C_FUE*(mue(1).C).^2 +(fbs.C_FUE-q_fue)+(mue(i).C-q_mue);
         a = tic;
         for nextState=1:size(states,1)
@@ -234,7 +234,7 @@ for episode = 1:Iterations
     end
 end
 %     Q = sumQ;
-answer.mue = mue;
+answer.mue = selectedMUE;
 answer.Q = sumQ;
 answer.Error = errorVector;
 answer.FBS = FBS;
